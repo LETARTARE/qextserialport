@@ -36,7 +36,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QDir>
 
-void QextSerialEnumeratorPrivate::init_sys()
+void QextSerialEnumeratorPrivate::platformSpecificInit()
 {
 #ifndef QESP_NO_UDEV
     monitor = NULL;
@@ -49,7 +49,7 @@ void QextSerialEnumeratorPrivate::init_sys()
 #endif
 }
 
-void QextSerialEnumeratorPrivate::destroy_sys()
+void QextSerialEnumeratorPrivate::platformSpecificDestruct()
 {
 #ifndef QESP_NO_UDEV
     if (notifier) {
@@ -197,13 +197,17 @@ void QextSerialEnumeratorPrivate::_q_deviceEvent()
     struct udev_device *dev = udev_monitor_receive_device(monitor);
     if (dev) {
         QextPortInfo pi = portInfoFromDevice(dev);
+
         QLatin1String action(udev_device_get_action(dev));
+
+/// prevents notification ! here is a bad place
+       // udev_device_unref(dev);
 
         if (action == QLatin1String("add"))
             Q_EMIT q->deviceDiscovered(pi);
         else if (action == QLatin1String("remove"))
             Q_EMIT q->deviceRemoved(pi);
-
+// here is a good place
         udev_device_unref(dev);
     }
 }
